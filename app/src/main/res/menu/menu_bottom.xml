@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:title="Prev Match"
+        android:icon="@drawable/ic_prev"
+        android:id="@+id/menu_prev"
+        ></item>
+    <item
+        android:title="Next Match"
+        android:icon="@drawable/ic_next"
+        android:id="@+id/menu_next"
+        ></item>
+
+</menu>

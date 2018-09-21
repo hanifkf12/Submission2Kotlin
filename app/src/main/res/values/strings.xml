@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Football Match Schedule</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="url_prev">https://www.thesportsdb.com/api/v1/json/1/eventspastleague.php?id=4328</string>
+    <string name="url_next">https://www.thesportsdb.com/api/v1/json/1/eventsnextleague.php?id=4328</string>
+</resources>
