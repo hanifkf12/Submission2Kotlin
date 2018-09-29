@@ -10,5 +10,10 @@
         android:icon="@drawable/ic_next"
         android:id="@+id/menu_next"
         ></item>
+    <item
+        android:title="Favorite"
+        android:id="@+id/menu_fav"
+        android:icon="@drawable/ic_favorites"
+        ></item>
 
 </menu>

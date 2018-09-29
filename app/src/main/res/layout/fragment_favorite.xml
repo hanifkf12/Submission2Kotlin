@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Fragment.NextFragment">
+    tools:context=".Fragment.FavoriteFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <android.support.v4.widget.SwipeRefreshLayout
@@ -11,7 +12,7 @@
         android:id="@+id/swipeRefresh2"
         android:layout_height="wrap_content">
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycle_next"
+            android:id="@+id/recycle_fav"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -24,4 +25,5 @@
         android:indeterminateTint="@color/colordate"
         android:visibility="invisible"
         />
+
 </LinearLayout>

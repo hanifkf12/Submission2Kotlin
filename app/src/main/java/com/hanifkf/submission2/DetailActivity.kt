@@ -1,19 +1,41 @@
 package com.hanifkf.submission2
 
+import android.database.sqlite.SQLiteConstraintException
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
+import android.support.v4.widget.SwipeRefreshLayout
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.widget.LinearLayout
 import com.androidnetworking.AndroidNetworking
 import com.androidnetworking.common.Priority
 import com.androidnetworking.error.ANError
 import com.androidnetworking.interfaces.JSONObjectRequestListener
 import com.bumptech.glide.Glide
+import com.hanifkf.submission2.Database.database
+import com.hanifkf.submission2.Model.Fav
+import com.hanifkf.submission2.Model.Favorite
+import com.hanifkf.submission2.R.drawable.ic_add_to_favorites
+import com.hanifkf.submission2.R.drawable.ic_added_to_favorites
 import kotlinx.android.synthetic.main.activity_detail.*
+import org.jetbrains.anko._LinearLayout
 import org.jetbrains.anko.ctx
+import org.jetbrains.anko.db.classParser
+import org.jetbrains.anko.db.delete
+import org.jetbrains.anko.db.insert
+import org.jetbrains.anko.db.select
+import org.jetbrains.anko.design.snackbar
+import org.jetbrains.anko.toast
 import org.json.JSONObject
 
 class DetailActivity : AppCompatActivity() {
+    private var menuItem: Menu? = null
+    private lateinit var favorite: Fav
+    private var isFavorite: Boolean = false
+    private lateinit var params: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,15 +46,64 @@ class DetailActivity : AppCompatActivity() {
         val base_url_team = "https://www.thesportsdb.com/api/v1/json/1/lookupteam.php?id="
 
         intent = intent
-        val params = intent.getStringExtra("idEvent")
+        params = intent.getStringExtra("idEvent")
         val params1 = intent.getStringExtra("idHome")
         val params2 = intent.getStringExtra("idAway")
-        val event = intent.getStringExtra("event");
+        val event = intent.getStringExtra("event")
+        val date = intent.getStringExtra("date")
+        val scoreHome = intent.getStringExtra("scoreHome")
+        val homeTeam = intent.getStringExtra("homeTeam")
+        val awayScore = intent.getStringExtra("awayScore")
+        val awayTeam = intent.getStringExtra("awayTeam")
+        favorite = Fav(params,date,homeTeam,scoreHome,awayTeam,awayScore,params1,params2,event)
 
         getHomeTeam(base_url_team,params1)
         getAwayTeam(base_url_team,params2)
         getDetail(base_url_event,params,event)
+        favoriteState()
     }
+    private fun addToFavorite(){
+        try {
+            database.use {
+                insert(Favorite.TABLE_FAVORITE,
+                        Favorite.EVENT_ID to favorite.idEvent,
+                        Favorite.EVENT_DATE to favorite.date,
+                        Favorite.HOME_TEAM to favorite.homeTeam,
+                        Favorite.SCORE_HOME to favorite.scoreHome,
+                        Favorite.AWAY_TEAM to favorite.awayTeam,
+                        Favorite.AWAY_SCORE to favorite.awayScore,
+                        Favorite.ID_HOME to favorite.idHome,
+                        Favorite.ID_AWAY to favorite.idAway,
+                        Favorite.EVENT to favorite.event)
+            }
+            toast("Add To Favorite")
+        }catch (e: SQLiteConstraintException){
+            toast(e.localizedMessage)
+        }
+    }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.detail_menu, menu)
+        menuItem = menu
+        setFavorite()
+        return true
+
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId){
+            R.id.add_to_favorite ->{
+                if (isFavorite) removeFromFavorite() else addToFavorite()
+
+                isFavorite = !isFavorite
+                setFavorite()
+
+                true
+            }
+            else ->super.onOptionsItemSelected(item)
+        }
+    }
+
+
 
     fun getHomeTeam(url : String,params:String){
         val home_url = url+params
@@ -41,7 +112,7 @@ class DetailActivity : AppCompatActivity() {
                 .build()
                 .getAsJSONObject(object : JSONObjectRequestListener{
                     override fun onResponse(response: JSONObject?) {
-                        Log.d("dasdasd", response.toString())
+                        //Log.d("dasdasd", response.toString())
                         val jsonArray = response!!.getJSONArray("teams")
                         for (i in 0 until jsonArray.length()) {
                             val jsonObject = jsonArray.getJSONObject(i)
@@ -64,7 +135,6 @@ class DetailActivity : AppCompatActivity() {
                 .build()
                 .getAsJSONObject(object : JSONObjectRequestListener{
                     override fun onResponse(response: JSONObject?) {
-                        Log.d("dasdasd", response.toString())
                         val jsonArray = response!!.getJSONArray("teams")
                         for (i in 0 until jsonArray.length()) {
                             val jsonObject = jsonArray.getJSONObject(i)
@@ -96,7 +166,7 @@ class DetailActivity : AppCompatActivity() {
                             if (event.equals("next")){
                                 home_score_detail.text = ""
                                 away_score_detail.text = ""
-                            }else{
+                            }else if(event.equals("prev")){
                                 home_score_detail.text = jsonObject.optString("intHomeScore")
                                 away_score_detail.text = jsonObject.optString("intAwayScore")
                                 scorer_home.text = jsonObject.optString("strHomeGoalDetails")
@@ -124,5 +194,33 @@ class DetailActivity : AppCompatActivity() {
                     }
 
                 })
+    }
+
+    private fun removeFromFavorite(){
+        try{
+            database.use {
+                delete(Favorite.TABLE_FAVORITE,"(EVENT_ID = {id})" ,
+                        "id" to params)
+            }
+            toast("Removed from Favorite")
+        }catch (e :SQLiteConstraintException){
+            toast(e.localizedMessage)
+        }
+    }
+
+    private fun setFavorite() {
+        if (isFavorite)
+            menuItem?.getItem(0)?.icon = ContextCompat.getDrawable(this, ic_added_to_favorites)
+        else
+            menuItem?.getItem(0)?.icon = ContextCompat.getDrawable(this, ic_add_to_favorites)
+    }
+    private fun favoriteState(){
+        database.use {
+            val result = select(Favorite.TABLE_FAVORITE)
+                    .whereArgs("(EVENT_ID = {id})",
+                            "id" to params)
+            val favorite = result.parseList(classParser<Favorite>())
+            if (!favorite.isEmpty()) isFavorite = true
+        }
     }
 }

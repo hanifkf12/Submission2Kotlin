@@ -1,4 +1,4 @@
-package com.hanifkf.submission2
+package com.hanifkf.submission2.Fragment
 
 
 import android.os.Bundle
@@ -13,11 +13,12 @@ import com.androidnetworking.common.Priority
 import com.androidnetworking.error.ANError
 import com.androidnetworking.interfaces.JSONObjectRequestListener
 import com.hanifkf.submission2.Adapter.ScoreAdapter
-import kotlinx.android.synthetic.main.fragment_next.view.*
+import com.hanifkf.submission2.DetailActivity
+import com.hanifkf.submission2.R
+import com.hanifkf.submission2.Model.Score
 import kotlinx.android.synthetic.main.fragment_prev.view.*
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.startActivity
-import org.jetbrains.anko.support.v4.toast
 import org.json.JSONObject
 
 
@@ -30,27 +31,31 @@ private const val ARG_PARAM2 = "param2"
  * A simple [Fragment] subclass.
  *
  */
-class NextFragment : Fragment() {
+class PrevFragment : Fragment() {
     private lateinit var adapter: ScoreAdapter
     private var score : MutableList<Score> = mutableListOf()
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_next, container, false)
-        view.progressBar2.visibility = View.VISIBLE
-        val url = getString(R.string.url_next)
+        val view =inflater.inflate(R.layout.fragment_prev, container, false)
+        view.progressBar1.visibility = View.VISIBLE
+        val url = getString(R.string.url_prev)
         getData(url,view)
-        view.swipeRefresh2.setOnRefreshListener {
+        view.swipeRefresh.setOnRefreshListener {
             getData(url,view)
         }
 
 
-        view.recycle_next.layoutManager = LinearLayoutManager(ctx)
+        view.recycle_prev.layoutManager = LinearLayoutManager(ctx)
         adapter =  ScoreAdapter(ctx, score){
-            startActivity<DetailActivity>("idEvent" to it.idEvent , "idHome" to it.idHome, "idAway" to it.idAway,"event" to "next")
+            //toast(it.idEvent)
+            startActivity<DetailActivity>("idEvent" to it.idEvent , "idHome" to it.idHome, "idAway" to it.idAway,"event" to "prev",
+                    "date" to it.date, "scoreHome" to it.scoreHome,"homeTeam" to it.homeTeam, "awayScore" to it.awayScore,"awayTeam" to it.awayTeam)
         }
-        view.recycle_next.adapter = adapter
+        view.recycle_prev.adapter = adapter
+
         return view
+
     }
 
     fun getData(url:String , view: View){
@@ -58,22 +63,21 @@ class NextFragment : Fragment() {
         AndroidNetworking.get(url)
                 .setPriority(Priority.MEDIUM)
                 .build()
-                .getAsJSONObject(object : JSONObjectRequestListener {
+                .getAsJSONObject(object :JSONObjectRequestListener{
                     override fun onResponse(response: JSONObject?) {
                         Log.d("Response", response.toString())
                         val jsonArray = response!!.getJSONArray("events")
                         for (i in 0 until jsonArray.length()) {
                             val jsonObject = jsonArray.getJSONObject(i)
-                            score.add(Score(jsonObject.optString("idEvent"),jsonObject.optString("dateEvent"),jsonObject.optString("strHomeTeam")
-                                    ,"",jsonObject.optString("strAwayTeam"),""
-                                    ,jsonObject.optString("idHomeTeam"),jsonObject.optString("idAwayTeam")))
+                            score.add(Score(jsonObject.optString("idEvent"), jsonObject.optString("dateEvent"), jsonObject.optString("strHomeTeam")
+                                    , jsonObject.optString("intHomeScore"), jsonObject.optString("strAwayTeam"), jsonObject.optString("intAwayScore")
+                                    , jsonObject.optString("idHomeTeam"), jsonObject.optString("idAwayTeam")))
                         }
                         score.addAll(score)
                         adapter.notifyDataSetChanged()
 
-                        view.swipeRefresh2.isRefreshing = false
-                        view.progressBar2.visibility = View.GONE
-
+                        view.swipeRefresh.isRefreshing = false
+                        view.progressBar1.visibility = View.GONE
                     }
 
                     override fun onError(anError: ANError?) {

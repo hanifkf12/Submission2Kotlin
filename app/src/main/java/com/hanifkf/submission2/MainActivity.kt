@@ -4,7 +4,9 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v4.app.Fragment
-import android.widget.Toast
+import com.hanifkf.submission2.Fragment.FavoriteFragment
+import com.hanifkf.submission2.Fragment.NextFragment
+import com.hanifkf.submission2.Fragment.PrevFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,6 +26,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.menu_next ->{
                     addFragment(NextFragment())
+                    return@OnNavigationItemSelectedListener true
+                }
+                R.id.menu_fav ->{
+                    addFragment(FavoriteFragment())
                     return@OnNavigationItemSelectedListener true
                 }
             }
